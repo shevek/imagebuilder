@@ -1,0 +1,132 @@
+import com.nebula.gradle.plugin.imagebuilder.*
+import com.redhat.et.libguestfs.GuestFS
+
+apply plugin: ImageBuilder
+
+/*
+class MyOperations implements Operations {
+	void foo(Closure c) {
+		println "Foo was called!"
+	}
+}
+*/
+
+// Image customization, using libguestfs.
+image {
+
+	/*
+	load MyOperations
+	foo {
+		// ...
+	}
+	*/
+
+	create {
+		size = 1024 * 1024 * 1024L
+	}
+
+	debootstrap {
+		repository "http://localhost:3142/ubuntu/"
+		release "raring"
+		packages "linux-image-generic", "grub-pc",
+			"libcap2-bin", "lvm2",
+			"psmisc", "vim", "strace", "ltrace"
+		// "cloud-init", "cloud-initramfs-growroot",
+	}
+
+	upload {
+		from 'src/files'
+		into '/'
+	}
+
+	set '/etc/default/locale/LANG', 'en_US.UTF-8'
+
+	hostname 'imagebuilder-demo'
+
+	// network - this needs a special routine
+	set "/etc/network/interfaces/auto[child::1 = 'eth0']/1", "eth0"
+	set "/etc/network/interfaces/iface[. = 'eth0']", "eth0"
+	set "/etc/network/interfaces/iface[. = 'eth0']/family", "inet"
+	set "/etc/network/interfaces/iface[. = 'eth0']/method", "dhcp"
+	// set "/etc/network/interfaces/iface[. = 'eth0']/address", "10.253.0.20"
+	// set "/etc/network/interfaces/iface[. = 'eth0']/netmask", "255.255.255.0"
+
+	user name: "root", password: "password"
+	user name: "nebula", password: "password", shell: "/bin/bash",
+		groups: [ 'sudo' ]
+	user("shevek") {
+		groups += [ 'sudo' ]
+	}
+
+	run "/usr/sbin/update-initramfs", "-u"
+	download {
+		from '/boot/vmlinuz-*-generic'
+		into new File(getOutputDir(), 'kernel')
+	}
+	download {
+		from '/boot/initrd.img-*-generic'
+		into new File(getOutputDir(), 'initrd')
+	}
+
+}
+
+// Demonstrates how to output a raw image with complex partitions.
+task('exportRaw', type: ImageTask) {
+
+	export {
+		outputFile "image.foo", "raw"
+
+		partition("boot") {
+			filesystem = "ext2"
+			size = 100 * M
+			mountpoint = "/boot"
+			bootable = true
+		}
+		partition("root") {
+			filesystem = "ext4"
+			size = 1 * G
+			mountpoint = "/"
+		}
+		partition("swap") {
+			filesystem = "swap"
+			size = 200 * M
+		}
+		partition("home") {
+			filesystem = "ext4"
+			size = 400 * M
+			mountpoint = "/home"
+		}
+	}
+}
+
+task('exportQcow', type: ImageTask) {
+	export {
+		outputFile "myimage", "qcow2"
+
+		partition("root") {
+			filesystem = "ext4"
+			size = 1 * G
+			mountpoint = "/"
+		}
+	}
+}
+
+task('exportVmdk', type: ImageTask) {
+	export {
+		outputFormat "vmdk"
+
+		partition("root") {
+			filesystem = "ext4"
+			size = 1 * G
+			mountpoint = "/"
+		}
+	}
+}
+
+task('inject', type: ImageTask) {
+	upload {
+		from 'src/files'
+		into '/'
+	}
+	rm "/var/log/upstart/*"
+}
