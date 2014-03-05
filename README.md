@@ -17,7 +17,7 @@ The requirements are:
 		fakeroot libguestfs-tools libguestfs-java openjdk-7-jre \
 		whois qemu-kvm
 	sudo usermod -a -G kvm $USER
-	sudo chmod 0644 /boot/vmlinuz\*
+	sudo chmod 0644 /boot/vmlinuz*
 	sudo update-guestfs-appliance	# Can be run as user?
 	sudo ln -s /usr/lib/x86_64-linux-gnu/jni/libguestfs_jni.so /usr/lib/jni
 
