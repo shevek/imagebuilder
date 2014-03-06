@@ -144,4 +144,64 @@ class UserOperations implements Operations {
 		}
 	}
 
+	@Input
+	static int gidMin = 500
+	@Input
+	static int gidMax = 30000
+
+	static class Group {
+		String name
+		int gid = -1
+
+		public String toString() {
+			return "$name:$gid"
+		}
+	}
+
+	void group(@Nonnull Map data, @Nonnull Closure details) {
+		Group g = new Group(data)
+		g.with details
+		println "Making group $g"
+		customize {
+			_group(delegate, g)
+		}
+	}
+
+	void group(@Nonnull Map data) {
+		group(data) { }
+	}
+
+	void group(@Nonnull String name, @Nonnull Closure details) {
+		group(name: name, details)
+	}
+
+	void group(@Nonnull String name) {
+		group(name: name) { }
+	}
+
+	void _group(ImageTask.Context c, Group r) {
+		GuestFS g = c as GuestFS
+		println "Making $r using $g"
+		if (!g.aug_match("/files/etc/group/${r.name}/gid")) {
+
+			if (r.gid < 0) {
+				r.gid = gidMin
+				g.aug_match("/files/etc/group//gid").each {
+					int gid = g.aug_get(it) as int
+					// Avoid hitting 'nobody' and 'nogroup' users
+					if (gid >= r.gid && gid < gidMax)
+						r.gid = gid + 1
+				}
+				// println "Creating ${r.name} using ${r.gid}"
+			}
+
+		}
+
+		g.aug_set("/files/etc/group/${r.name}/password", "x")
+		if (r.gid >= 0)
+			g.aug_set("/files/etc/group/${r.name}/gid", r.gid as String)
+		else
+			r.gid = g.aug_get("/files/etc/group/${r.name}/gid") as int
+	}
+
 }

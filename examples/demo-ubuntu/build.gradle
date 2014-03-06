@@ -27,10 +27,11 @@ image {
 
 	debootstrap {
 		repository "http://localhost:3142/ubuntu/"
-		release "raring"
+		release "saucy"
 		packages "linux-image-generic", "grub-pc",
 			"libcap2-bin", "lvm2",
 			"psmisc", "vim", "strace", "ltrace"
+
 		// "cloud-init", "cloud-initramfs-growroot",
 	}
 
@@ -58,15 +59,12 @@ image {
 		groups += [ 'sudo' ]
 	}
 
+	group "developers"
+	group name: "helpers", gid: 1234
+
 	run "/usr/sbin/update-initramfs", "-u"
-	download {
-		from '/boot/vmlinuz-*-generic'
-		into new File(getOutputDir(), 'kernel')
-	}
-	download {
-		from '/boot/initrd.img-*-generic'
-		into new File(getOutputDir(), 'initrd')
-	}
+	kernel_from '/boot/vmlinuz-*-generic'
+	initrd_from '/boot/initrd.img-*-generic'
 
 }
 

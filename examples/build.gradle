@@ -5,7 +5,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.nebula.gradle:gradle-imagebuilder-plugin:1.0.0'
+        classpath 'com.nebula.gradle:gradle-imagebuilder-plugin:1.0.1'
 		classpath fileTree(dir: '/usr/share/java', include: 'libguestfs-*.jar')
     }
 }
