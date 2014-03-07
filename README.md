@@ -21,6 +21,13 @@ The requirements are:
 	sudo chmod 0644 /boot/vmlinuz*
 	sudo ln -s /usr/lib/x86_64-linux-gnu/jni/libguestfs_jni.so /usr/lib/jni
 
+Note: if you are running imagebuilder inside a VM, ensure that nested
+virutalization is supported by your hypervisor and guest OS. You can
+check the following command to determine if nested virtualization
+is supported:
+
+	kvm-ok	# Look for "KVM acceleration can be used" in output.
+
 # Installation
 
 	libguestfs-test-tool

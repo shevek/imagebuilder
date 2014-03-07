@@ -115,7 +115,10 @@ poweroff -f
 		// Requesting the file closes the GuestFS handle.
 		File imageFile = c as File
 		def qemuCommand = [
-			"qemu-system-x86_64", "-m", "512",
+			"qemu-system-x86_64",
+				"-enable-kvm",
+				"-cpu", "host",
+				"-m", "512",
 				"-hda", imageFile.absolutePath,
 				"-kernel", d.installKernel,
 				"-append", "rootwait root=/dev/sda rw console=tty0 console=ttyS0 init=/debootstrap/install",
