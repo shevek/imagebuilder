@@ -32,7 +32,7 @@ image {
 			"libcap2-bin", "lvm2",
 			"psmisc", "vim", "strace", "ltrace"
 			// "cloud-init", "cloud-initramfs-growroot",
-		options []
+		// options "--no-check-gpg"
 	}
 
 	upload {

@@ -66,8 +66,8 @@ poweroff -f
 			this.variant = variant
 		}
 
-		void options(Iterable<String> options) {
-			this.options += options
+		void options(String... options) {
+			this.options.addAll(options)
 		}
 	}
 
