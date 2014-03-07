@@ -21,10 +21,14 @@ class DebianOperations implements Operations {
 		@Input
 		String release = "quantal"
 		@Input
+		List<String> components = [ "main" ]
+		@Input
 		List<String> packages = []
 
 		@Input
 		String variant = "-"
+		@Input
+		List<String> options = []
 
 		@Input
 		String installKernel = "/vmlinuz"
@@ -50,12 +54,20 @@ poweroff -f
 			this.release = release
 		}
 
+		void components(String... components) {
+			this.components.addAll(components)
+		}
+
 		void packages(String... packages) {
 			this.packages.addAll(packages)
 		}
 
 		void variant(String variant) {
 			this.variant = variant
+		}
+
+		void options(Iterable<String> options) {
+			this.options += options
 		}
 	}
 
@@ -74,13 +86,16 @@ poweroff -f
 		def fakerootCommand = [ "fakeroot", "-s", fakerootStateFile ]
 		File debootstrapDir = new File(tmpDir, name + '.root')
 		debootstrapDir.mkdirs()
+		String debootstrapComponents = d.components.join(",")
 		String debootstrapPackages = d.packages.join(",")
 		def debootstrapCommand = fakerootCommand + [
 				"debootstrap",
 					"--foreign", "--verbose",
 					"--variant=" + d.variant,
 					"--keyring", "/etc/apt/trusted.gpg",
-					"--include=" + debootstrapPackages,
+					"--components=" + debootstrapComponents,
+					"--include=" + debootstrapPackages
+			] + d.options + [
 					d.release, debootstrapDir, d.repository
 			]
 

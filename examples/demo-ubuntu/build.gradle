@@ -31,8 +31,8 @@ image {
 		packages "linux-image-generic", "grub-pc",
 			"libcap2-bin", "lvm2",
 			"psmisc", "vim", "strace", "ltrace"
-
-		// "cloud-init", "cloud-initramfs-growroot",
+			// "cloud-init", "cloud-initramfs-growroot",
+		options []
 	}
 
 	upload {
@@ -44,13 +44,7 @@ image {
 
 	hostname 'imagebuilder-demo'
 
-	// network - this needs a special routine
-	set "/etc/network/interfaces/auto[child::1 = 'eth0']/1", "eth0"
-	set "/etc/network/interfaces/iface[. = 'eth0']", "eth0"
-	set "/etc/network/interfaces/iface[. = 'eth0']/family", "inet"
-	set "/etc/network/interfaces/iface[. = 'eth0']/method", "dhcp"
-	// set "/etc/network/interfaces/iface[. = 'eth0']/address", "10.253.0.20"
-	// set "/etc/network/interfaces/iface[. = 'eth0']/netmask", "255.255.255.0"
+	network_interface "eth0"
 
 	user name: "root", password: "password"
 	user name: "nebula", password: "password", shell: "/bin/bash",

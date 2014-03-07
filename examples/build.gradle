@@ -1,11 +1,13 @@
 buildscript {
     repositories {
         mavenLocal()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+        maven { url 'https://oss.sonatype.org/content/repositories/releases/' }
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.nebula.gradle:gradle-imagebuilder-plugin:1.0.1'
+        classpath 'com.nebula.gradle:gradle-imagebuilder-plugin:1.0.2-SNAPSHOT'
 		classpath fileTree(dir: '/usr/share/java', include: 'libguestfs-*.jar')
     }
 }
