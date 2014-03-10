@@ -15,7 +15,7 @@ class UserOperations implements Operations {
 	@Input
 	static int uidMax = 30000
 
-	static class User {
+	public static class User {
 		String name
 		String password
 		int uid = -1
@@ -29,24 +29,29 @@ class UserOperations implements Operations {
 
 	}
 
-	void user(@Nonnull Map data, @Nonnull Closure details) {
+	@Nonnull
+	User user(@Nonnull Map data, @Nonnull Closure details) {
 		User u = new User(data)
 		u.with details
 		customize {
 			_user(delegate, u)
 		}
+		return u
 	}
 
-	void user(@Nonnull Map data) {
-		user(data) { }
+	@Nonnull
+	User user(@Nonnull Map data) {
+		return user(data) { }
 	}
 
-	void user(@Nonnull String name, @Nonnull Closure details) {
-		user(name: name, details)
+	@Nonnull
+	User user(@Nonnull String name, @Nonnull Closure details) {
+		return user(name: name, details)
 	}
 
-	void user(@Nonnull String name) {
-		user(name: name) { }
+	@Nonnull
+	User user(@Nonnull String name) {
+		return user(name: name) { }
 	}
 
 	void _user(ImageTask.Context c, User u) {
@@ -149,7 +154,7 @@ class UserOperations implements Operations {
 	@Input
 	static int gidMax = 30000
 
-	static class Group {
+	public static class Group {
 		String name
 		int gid = -1
 
@@ -158,30 +163,33 @@ class UserOperations implements Operations {
 		}
 	}
 
-	void group(@Nonnull Map data, @Nonnull Closure details) {
+	@Nonnull
+	Group group(@Nonnull Map data, @Nonnull Closure details) {
 		Group g = new Group(data)
 		g.with details
-		println "Making group $g"
 		customize {
 			_group(delegate, g)
 		}
+		return g
 	}
 
-	void group(@Nonnull Map data) {
-		group(data) { }
+	@Nonnull
+	Group group(@Nonnull Map data) {
+		return group(data) { }
 	}
 
-	void group(@Nonnull String name, @Nonnull Closure details) {
-		group(name: name, details)
+	@Nonnull
+	Group group(@Nonnull String name, @Nonnull Closure details) {
+		return group(name: name, details)
 	}
 
-	void group(@Nonnull String name) {
-		group(name: name) { }
+	@Nonnull
+	Group group(@Nonnull String name) {
+		return group(name: name) { }
 	}
 
 	void _group(ImageTask.Context c, Group r) {
 		GuestFS g = c as GuestFS
-		println "Making $r using $g"
 		if (!g.aug_match("/files/etc/group/${r.name}/gid")) {
 
 			if (r.gid < 0) {
