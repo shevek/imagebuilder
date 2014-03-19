@@ -19,7 +19,8 @@ The requirements are:
 	sudo usermod -a -G kvm $USER
 	sudo update-guestfs-appliance	# Can be run as user?
 	sudo chmod 0644 /boot/vmlinuz*
-	sudo ln -s /usr/lib/x86_64-linux-gnu/jni/libguestfs_jni.so /usr/lib/jni
+	sudo mkdir -p /usr/lib/jni
+	sudo ln -s /usr/lib/x86_64-linux-gnu/jni/libguestfs_jni.so /usr/lib/jni/
 
 Note: if you are running imagebuilder inside a VM, ensure that nested
 virutalization is supported by your hypervisor and guest OS. You can
@@ -71,7 +72,7 @@ You might want to:
 
 # Internals and Development
 
-This is a wrappar around libguestfs and augeas.
+This is a wrapper around libguestfs and augeas.
 
 To experiment with what functions are available in the configure{}
 block, use guestfish:
@@ -127,4 +128,3 @@ You need to:
 > Anything else:
 
 Try running libguestfs-test-tool anyway.
-
