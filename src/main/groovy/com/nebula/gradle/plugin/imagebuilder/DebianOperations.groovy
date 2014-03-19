@@ -15,6 +15,8 @@ import org.gradle.api.tasks.OutputFile
 // @Category(ImageTask)
 class DebianOperations implements Operations {
 
+	public static final String HOOK_INTERSTAGE = "interstage"
+
 	static class Debootstrap {
 		@Input
 		String repository = "http://localhost:3142/ubuntu/"
@@ -24,6 +26,10 @@ class DebianOperations implements Operations {
 		List<String> components = [ "main" ]
 		@Input
 		List<String> packages = []
+		@Input
+		List<String> debs = []
+
+		Map<String, Closure> hooks = [:]
 
 		@Input
 		String variant = "-"
@@ -34,7 +40,7 @@ class DebianOperations implements Operations {
 		String installKernel = "/vmlinuz"
 		@Input
 		String installScript = """#!/bin/sh
-/debootstrap/debootstrap --second-stage
+/debootstrap/debootstrap --second-stage --keep-debootstrap-dir
 /usr/bin/apt-get -y clean
 sync
 sleep 1
@@ -62,6 +68,10 @@ poweroff -f
 			this.packages.addAll(packages)
 		}
 
+		void debs(String... debs) {
+			this.debs.addAll(debs)
+		}
+
 		void variant(String variant) {
 			this.variant = variant
 		}
@@ -78,6 +88,13 @@ poweroff -f
 		customize {
 			_debootstrap(delegate, d)
 		}
+	}
+
+	private void hook(ImageTask.Context c, Debootstrap d, String name) {
+		Closure hook = d.hooks.get(name)
+		if (hook == null)
+			return
+		hook.call()
 	}
 
 	public void _debootstrap(ImageTask.Context c, Debootstrap d) {
@@ -107,6 +124,31 @@ poweroff -f
 		File scriptFile = new File(debootstrapDir, 'debootstrap/install');
 		scriptFile.text = d.installScript
 		ant.chmod(file: scriptFile, perm: 'ugo+rx')
+
+		File debDir = new File(debootstrapDir, 'var/cache/apt/archives/')
+		File debNames = new File(debootstrapDir, 'debootstrap/base')
+		File debPaths = new File(debootstrapDir, 'debootstrap/debpaths')
+		d.debs.each { deb ->
+			if (deb.startsWith("http")) {
+				ant.get(
+					src: deb,
+					dest: debDir
+				)
+			} else {
+				project.copy {
+					from project.file(deb)
+					into debDir
+				}
+			}
+			String debName = deb.substring(deb.lastIndexOf('/') + 1)
+			String debFile = debName
+			debName -= ~/_.*$/
+			debNames << "$debName\n"
+			debPaths << "$debName /var/cache/apt/archives/$debFile\n"
+			// println "$debName -> $debFile"
+		}
+
+		hook(c, d, HOOK_INTERSTAGE)
 
 		GuestFS g = c as GuestFS
 		// g.mount(fsDevice(g, 1, 0), '/')
@@ -140,6 +182,10 @@ poweroff -f
 		g.aug_set('/files/etc/default/locale/LANG', 'en_US.UTF-8')
 
 		// project.delete(debootstrapDir, fakerootStateFile)
+		File debootstrapLog = new File(tmpDir, name + '.debootstrap.log')
+		g.download("/debootstrap/debootstrap.log",
+				debootstrapLog.absolutePath)
+		g.rm_rf("/debootstrap")
 	}
 
 	public void kernel_from(final String path) {
