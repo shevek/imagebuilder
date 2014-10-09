@@ -16,7 +16,7 @@ class ImageOperations implements Operations {
 		@Input
 		long size
 		@Input
-		String mkfsCommand = 'mkfs.ext4'
+		String mkfsCommand = '/sbin/mkfs.ext4'
 		@Input
 		List<String> mkfsArgs = [ '-F' ]
 	}
