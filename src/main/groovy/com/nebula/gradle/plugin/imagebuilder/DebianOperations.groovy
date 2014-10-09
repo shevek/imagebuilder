@@ -161,7 +161,7 @@ poweroff -f
 				"-enable-kvm",
 				"-cpu", "host",
 				"-m", "512",
-				"-hda", imageFile.absolutePath,
+				"-drive", "file=" + imageFile.absolutePath + ",if=virtio,cache=none,aio=native",
 				"-kernel", d.installKernel,
 				"-append", "rootwait root=/dev/sda rw console=tty0 console=ttyS0 init=/debootstrap/install",
 				"-nographic"
