@@ -1,16 +1,18 @@
 package com.nebula.gradle.plugin.imagebuilder
 
-import javax.annotation.Nonnull
+import java.io.File;
+import javax.annotation.Nonnull;
 import com.redhat.et.libguestfs.GuestFS;
 import com.redhat.et.libguestfs.Partition;
 // import com.redhat.et.libguestfs.EventCallback;
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.DefaultTask;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
 
 // @Category(ImageTask)
 class DebianOperations implements Operations {
@@ -68,8 +70,17 @@ poweroff -f
 			this.packages.addAll(packages)
 		}
 
-		void debs(String... debs) {
-			this.debs.addAll(debs)
+		void debs(Object... debs) {
+            for (Object deb : debs) {
+                if (deb instanceof FileCollection) {
+                    deb.each { file ->
+                        this.debs.add(file.getAbsolutePath());
+                    }
+                }
+                else {
+                    this.debs.add(deb.toString());
+                }
+            }
 		}
 
 		void variant(String variant) {
@@ -136,6 +147,7 @@ poweroff -f
 				)
 			} else {
 				project.copy {
+					// from project.file(deb)
 					from project.file(deb)
 					into debDir
 				}
@@ -158,13 +170,14 @@ poweroff -f
 		File imageFile = c as File
 		def qemuCommand = [
 			"qemu-system-x86_64",
-				"-enable-kvm",
+				"-nodefaults", "-global", "virtio-blk-pci.scsi=off",
+				"-machine", "accel=kvm:tcg",
 				"-cpu", "host",
 				"-m", "512",
-				"-drive", "file=" + imageFile.absolutePath + ",if=virtio,cache=none,aio=native",
+				"-drive", "file=" + imageFile.absolutePath + ",if=virtio,aio=native,cache=unsafe",   // cache=none fails on tmpfs
 				"-kernel", d.installKernel,
-				"-append", "rootwait root=/dev/sda rw console=tty0 console=ttyS0 init=/debootstrap/install",
-				"-nographic"
+				"-append", "rootwait root=/dev/vda rw console=tty0 console=ttyS0 init=/debootstrap/install",
+				"-nographic", "-serial", "stdio", "-device", "sga"
 		]
 		logger.info("Executing " + qemuCommand)
 		project.exec {
