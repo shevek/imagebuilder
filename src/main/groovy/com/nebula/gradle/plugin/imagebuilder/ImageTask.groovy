@@ -66,9 +66,9 @@ class ImageTask extends AbstractImageTask {
 			return ImageTask.this
 		}
 
-		public GuestFS getGuestFS() {
+		public GuestFS getGuestFS(Closure c = null) {
 			if (g == null) {
-				g = fsOpen()
+				g = fsOpen(c)
 				fsInspect(g)
 				g.aug_init("/", 0)
 			}
