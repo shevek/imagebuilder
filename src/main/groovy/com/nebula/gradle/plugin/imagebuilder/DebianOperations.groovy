@@ -40,6 +40,8 @@ class DebianOperations implements Operations {
 
 		@Input
 		String installKernel = "/vmlinuz"
+		// @Input
+		// String installInitrd = "/initrd.img"
 		@Input
 		String installScript = """#!/bin/sh
 /debootstrap/debootstrap --second-stage --keep-debootstrap-dir
@@ -170,13 +172,19 @@ poweroff -f
 		File imageFile = c as File
 		def qemuCommand = [
 			"qemu-system-x86_64",
-				"-nodefaults", "-global", "virtio-blk-pci.scsi=off",
+				"-nodefaults", "-nodefconfig", "-no-user-config", "-no-reboot",
+				// "-rtc", "driftfix=slew", "-no-hpet", "-no-kvm-pit-reinjection",
+				// "-global", "virtio-blk-pci.scsi=off",
 				"-machine", "accel=kvm:tcg",
 				"-cpu", "host",
 				"-m", "512",
-				"-drive", "file=" + imageFile.absolutePath + ",if=virtio,aio=native,cache=unsafe",   // cache=none fails on tmpfs
+				// We need the drive to appear as /dev/sda
+				"-drive", "file=" + imageFile.absolutePath + ",cache=unsafe,aio=native",   // cache=none fails on tmpfs
+				// "-device", "virtio-scsi-pci",
+				// "-device", "scsi-hd,drive=disk0",
 				"-kernel", d.installKernel,
-				"-append", "rootwait root=/dev/vda rw console=tty0 console=ttyS0 init=/debootstrap/install",
+				// "-initrd", d.installInitrd,	// Breaks if the initrd has custom scripts/local-top
+				"-append", "rootwait root=/dev/sda rw console=tty0 console=ttyS0 init=/debootstrap/install",
 				"-nographic", "-serial", "stdio", "-device", "sga"
 		]
 		logger.info("Executing " + qemuCommand)
