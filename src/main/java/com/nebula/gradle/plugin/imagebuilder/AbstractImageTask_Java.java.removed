@@ -1,0 +1,206 @@
+package com.nebula.gradle.plugin.imagebuilder;
+
+import java.io.File;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import org.gradle.api.Project;
+import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.process.ExecResult;
+import com.redhat.et.libguestfs.GuestFS;
+import com.redhat.et.libguestfs.LibGuestFSException;
+import com.redhat.et.libguestfs.Partition;
+import groovy.lang.Closure;
+import groovy.lang.MetaClass;
+import java.io.ByteArrayOutputStream;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+public abstract class AbstractImageTask_Java extends ConventionTask {
+
+    @Nonnull
+    private final Project project;
+	@Input
+	File tmpDir;
+	@Input
+	File outputDir;
+	@Input
+	String imageFileName = "image";
+	@Input
+	String imageFileExtension = ".tmp";
+	// @OutputFile
+	File imageFile;
+	@Input
+	String imageFormat = "raw";
+
+	public AbstractImageTask_Java(@Nonnull Project project) {
+		conventionMapping("tmpDir", new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                return new File(project.getBuildDir(), "tmp");
+            }
+		});
+		conventionMapping("outputDir", new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                return new File(project.getBuildDir(), "output");
+            }
+		});
+		conventionMapping("imageFile", new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                String name = getImageFileName() + getImageFileExtension();
+                return new File(getTmpDir(), name);
+            }
+		});
+        this.project = project;
+	}
+
+	public void imageFile(@Nonnull Object file) {
+		imageFile = project.file(file);
+	}
+
+	public void imageFormat(@Nonnull String format) {
+		imageFormat = format;
+	}
+
+	// Must be public, called via owner.qx()
+    public String qx(@Nonnull List<String> command) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+        project.exec(new Closure(this) {
+        });
+		// project.exec {
+			// standardOutput out
+			// commandLine command
+		// }
+		return out.toString().trim();
+	}
+
+	public void fsCreate(@Nonnull File imageFile, String imageFormat,
+			long size) {
+        File parentFile = imageFile.getParentFile();
+        if (parentFile != null)
+            parentFile.mkdirs();
+		project.exec {
+			commandLine "qemu-img", "create",
+					"-f", imageFormat,
+					imageFile.absolutePath, size
+		}
+	}
+
+	@Nonnull
+	public GuestFS fsOpen(@Nonnull File imageFile, String imageFormat,
+			Closure c = null) {
+		GuestFS g = new GuestFS();
+		g.set_trace(true);
+		Map<String, Object> optargs = [
+			"format"   : imageFormat,
+			// TODO: Support readonly for exports.
+			"readonly" : Boolean.FALSE,
+		];
+		g.add_drive_opts(imageFile.absolutePath, optargs);
+		if (c != null) {
+			g.with c
+		}
+		g.launch();
+		return g;
+	}
+
+	@Nonnull
+	public GuestFS fsOpen(Closure c = null) {
+		return fsOpen(getImageFile(), getImageFormat(), c);
+	}
+
+	@Nonnull
+	public String fsDevice(@Nonnull GuestFS g,
+						@Nonnegative int deviceCount,
+						@Nonnegative int deviceIndex) {
+		String[] devices = g.list_devices();
+		// println "Devices are " + devices
+		return devices[deviceIndex];
+	}
+
+	public void fsInspect(@Nonnull GuestFS g) {
+		Map<String, String> filesystems = g.list_filesystems();
+		switch (filesystems.size()) {
+			case 0:
+				throw new LibGuestFSException("No filesystems found");
+			case 1:
+				filesystems.each { String device, filesystem ->
+					g.mount(device, "/");
+				}
+				return;
+		}
+
+		String[] osRoots = g.inspect_os();
+		println "Operating system roots are " + osRoots;
+		osRoots.find { String osRoot ->
+			if (g.inspect_get_type(osRoot) != "linux")
+				return false
+			Map<String, String> mountpoints = g.inspect_get_mountpoints(osRoot)
+			println "Operating system mountpoints are " + mountpoints
+			// Sort by mount order!
+			mountpoints = new TreeMap<String, String>(mountpoints)
+			mountpoints.each { String mountpoint, device ->
+				g.mount(device, mountpoint)
+			}
+		}
+	}
+
+	private File fsMkfifo() {
+		def fifoFile = new File(getTmpDir(), getName() + ".fifo");
+		if (fifoFile.exists())
+			fifoFile.delete();
+		project.exec {
+			commandLine "mkfifo", fifoFile.absolutePath
+		}
+		return fifoFile;
+	}
+
+	public void fsUpload(@Nonnull GuestFS g,
+			@Nonnull File srcRoot, @Nonnull File srcState,
+			@Nonnull String dstRoot = "/") {
+		g.mkdir_p(dstRoot);
+
+		File tarFile = fsMkfifo();
+
+		// Needs to read files only readable as root.
+		def fakerootCommand = [ ];
+		def tarCommand = fakerootCommand + [
+			"tar",
+			"-cvf", tarFile.absolutePath,
+		];
+
+		if (srcState)
+			fakerootCommand = [ "fakeroot", "-s", srcState ];
+		else
+			tarCommand += [ "--owner", "root", "--group", "root" ];
+
+		tarCommand += [
+			"-C", srcRoot.absolutePath,
+			"."
+		];
+
+		def srcCommand = fakerootCommand + tarCommand;
+		def tarProcess = srcCommand.execute();
+		tarProcess.consumeProcessOutput(System.out, System.err);
+		g.tar_in(tarFile.absolutePath, dstRoot);
+		tarProcess.waitFor();
+
+		project.delete(tarFile);
+	}
+
+	public void fsDownload(@Nonnull GuestFS g) {
+		assert false : "Not yet implemented.";
+	}
+
+	public void fsClose(@Nonnull GuestFS g) {
+		g.sync();
+		g.shutdown();
+		g.close();
+	}
+}
