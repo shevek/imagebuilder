@@ -1,0 +1,43 @@
+	apply plugin: 'com.bmuschko.nexus'
+
+	project.afterEvaluate {
+		uploadArchives {
+			repositories {
+				mavenDeployer {
+					uniqueVersion = false
+				}
+			}
+		}
+	}
+
+	modifyPom {
+		// Closure to configure all the POM with extra info, common to all projects
+		project {
+			name "${project.name}"
+			description "A virtual machine disk image builder for Gradle."
+			developers {
+				developer {
+					id 'shevek'
+					name 'Shevek'
+					email 'shevek@nebula.com'
+				}
+			}
+			licenses {
+				license {
+					name 'The Apache Software License, Version 2.0'
+					url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+					distribution 'repo'
+				}
+			}
+			url "https://github.com/nebula/${rootProject.githubProjectName}"
+			scm {
+				connection "scm:git:git@github.com:nebula/${rootProject.githubProjectName}.git"
+				url "scm:git:git@github.com:nebula/${rootProject.githubProjectName}.git"
+				developerConnection "scm:git:git@github.com:nebula/${rootProject.githubProjectName}.git"
+			}
+			issueManagement {
+				system 'github'
+				url "https://github.com/nebula/${rootProject.githubProjectName}/issues"
+			}
+		}
+	}
