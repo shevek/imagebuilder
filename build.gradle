@@ -5,6 +5,8 @@ buildscript {
 	apply from: file('gradle/buildscript.gradle'), to: buildscript 
 }
 
+apply plugin: 'groovy'
+
 apply from: file('gradle/convention.gradle')
 apply from: file('gradle/github.gradle')
 apply from: file('gradle/nexus.gradle')
@@ -14,5 +16,6 @@ apply from: file('gradle/license.gradle')
 dependencies {
 	compile gradleApi()
 	compile 'com.google.guava:guava:18.0'
+	compile 'org.anarres.qemu:qemu-exec:1.0.1'
 	compile fileTree(dir: '/usr/share/java', include: 'libguestfs-*.jar')
 }

@@ -127,7 +127,7 @@ class ImageTask extends AbstractImageTask {
 	}
 
 	@TaskAction
-	@Override
+	// @Override
 	void run() {
 		Context c = new Context()
 		try {

@@ -17,7 +17,7 @@ class SetupTask extends AbstractImageTask {
 	}
 
 	@TaskAction
-	@Override
+	// @Override
 	void run() {
 	}
 }
