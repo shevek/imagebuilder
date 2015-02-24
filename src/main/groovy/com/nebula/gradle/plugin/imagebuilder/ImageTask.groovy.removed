@@ -1,51 +1,51 @@
-package com.nebula.gradle.plugin.imagebuilder
+package com.nebula.gradle.plugin.imagebuilder;
 
-import javax.annotation.Nonnull
-import com.google.common.base.Charsets
-import com.redhat.et.libguestfs.GuestFS
-import com.redhat.et.libguestfs.Partition
-import com.redhat.et.libguestfs.LibGuestFSException
-import org.gradle.api.DefaultTask
-import org.gradle.api.Project
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
+import javax.annotation.Nonnull;
+import com.google.common.base.Charsets;
+import com.redhat.et.libguestfs.GuestFS;
+import com.redhat.et.libguestfs.Partition;
+import com.redhat.et.libguestfs.LibGuestFSException;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.Project;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
 
-class ImageTask extends AbstractImageTask {
+public class ImageTask extends AbstractImageTask {
 
 	// @Input
 	List<Closure> customizations = new ArrayList<>()
 
 	public ImageTask() {
-		outputs.upToDateWhen { false }
-		description = "Builds an image."
+        upToDateWhenFalse();
+        setDescription("Builds an image.");
 		load ImageOperations, FileOperations, ExecuteOperations,
 			DebianOperations,
 			UserOperations, NetworkOperations,
 			ExportOperations, TarOperations
 	}
 
-	void load(Class<? extends Operations>[] operations) {
+	public void load(Class<? extends Operations>[] operations) {
 		operations.each { owner.metaClass.mixin(it) }
 	}
 
-	void customize(Closure c) {
+	public void customize(Closure c) {
 		customizations.add(c)
 	}
 
 	// Augeas customizations
 
-	void set(String path, String value) {
+	public void set(String path, String value) {
 		customize {
 			GuestFS g = delegate as GuestFS
 			g.aug_set("/files$path", value)
 		}
 	}
 
-	void set(Map<String, String> settings) {
+	public void set(Map<String, String> settings) {
 		customize {
 			GuestFS g = delegate as GuestFS
 			m.each { String k, v ->
@@ -54,7 +54,7 @@ class ImageTask extends AbstractImageTask {
 		}
 	}
 
-	class Context {
+	public class Context {
 		GuestFS g
 
 		// Makes the project keyword work in operations.

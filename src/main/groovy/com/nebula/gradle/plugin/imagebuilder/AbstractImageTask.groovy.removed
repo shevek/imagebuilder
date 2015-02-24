@@ -14,6 +14,7 @@ import com.redhat.et.libguestfs.GuestFS;
 import com.redhat.et.libguestfs.LibGuestFSException
 import com.redhat.et.libguestfs.Partition;
 
+@Deprecated // Ported to Java.
 abstract class AbstractImageTask extends ConventionTask {
 
 	@Input

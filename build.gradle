@@ -5,8 +5,6 @@ buildscript {
 	apply from: file('gradle/buildscript.gradle'), to: buildscript 
 }
 
-apply plugin: 'groovy'
-
 apply from: file('gradle/convention.gradle')
 apply from: file('gradle/github.gradle')
 apply from: file('gradle/nexus.gradle')

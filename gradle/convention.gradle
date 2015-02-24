@@ -1,4 +1,5 @@
 	apply plugin: 'java' // Plugin as major conventions
+	apply plugin: 'groovy' // Plugin as major conventions
 	// apply plugin: 'errorprone'
 	apply plugin: 'info'
 
