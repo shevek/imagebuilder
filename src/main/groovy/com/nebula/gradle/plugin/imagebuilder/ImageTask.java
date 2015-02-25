@@ -7,6 +7,7 @@ import com.redhat.et.libguestfs.GuestFS;
 import com.redhat.et.libguestfs.LibGuestFSException;
 import groovy.lang.ExpandoMetaClass;
 import groovy.lang.GroovyObjectSupport;
+import groovy.lang.MetaClass;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckForNull;
 import org.codehaus.groovy.reflection.MixinInMetaClass;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -34,9 +36,11 @@ public class ImageTask extends AbstractImageTask {
     }
 
     public void load(@Nonnull List<Class<? extends Operations>> operations) {
-        ExpandoMetaClass metaClass = (ExpandoMetaClass) InvokerHelper.getMetaClass(getClass());
-        // for (Class<? extends Operations> operation : operations)
-        MixinInMetaClass.mixinClassesToMetaClass(metaClass, Lists.<Class>newArrayList(operations));
+        // if (!(metaClass instanceof ExpandoMetaClass))
+        for (Class<? extends Operations> operation : operations)
+            DefaultGroovyMethods.mixin(getClass(), operation);
+        // MetaClass metaClass = InvokerHelper.getMetaClass(getClass());
+        // MixinInMetaClass.mixinClassesToMetaClass(metaClass, Lists.<Class>newArrayList(operations));
     }
 
     public void load(@Nonnull Class<? extends Operations>... operations) {

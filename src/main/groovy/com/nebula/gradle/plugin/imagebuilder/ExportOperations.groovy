@@ -140,7 +140,7 @@ class ExportOperations implements Operations {
 		fsCreate(outputFile, e.outputFormat, getSize(e))
 		GuestFS g = fsOpen(outputFile, e.outputFormat) {
 			Map<String, Object> optargs = [
-				"format"   : imageFormat,
+				"format"   : imageFormat.toString(),
 				"readonly" : Boolean.TRUE,
 			];
 			it.add_drive_opts(imageFile.absolutePath, optargs);

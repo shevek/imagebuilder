@@ -11,6 +11,8 @@ apply from: file('gradle/nexus.gradle')
 apply from: file('gradle/check.gradle')
 apply from: file('gradle/license.gradle')
 
+groovydoc.enabled = false
+
 dependencies {
 	compile gradleApi()
 	compile 'com.google.guava:guava:18.0'

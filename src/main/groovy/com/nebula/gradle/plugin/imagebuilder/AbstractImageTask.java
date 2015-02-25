@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.redhat.et.libguestfs.GuestFS;
 import com.redhat.et.libguestfs.LibGuestFSException;
+import groovy.lang.Closure;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -138,6 +139,10 @@ public abstract class AbstractImageTask extends ConventionTask {
         image.create(imageFormat, size);
     }
 
+    public void fsCreate(@Nonnull File imageFile, @Nonnull String imageFormat, @Nonnegative long size) throws IOException {
+        fsCreate(imageFile, QEmuImageFormat.valueOf(imageFormat), size);
+    }
+
     @Nonnull
     public GuestFS fsOpen(@Nonnull File imageFile, @Nonnull QEmuImageFormat imageFormat, @CheckForNull Action<GuestFS> c)
             throws LibGuestFSException {
@@ -157,9 +162,31 @@ public abstract class AbstractImageTask extends ConventionTask {
     }
 
     @Nonnull
+    public GuestFS fsOpen(@Nonnull File imageFile, @Nonnull String imageFormat, @CheckForNull Action<GuestFS> c)
+            throws LibGuestFSException {
+        return fsOpen(imageFile, QEmuImageFormat.valueOf(imageFormat), c);
+    }
+
+    @Nonnull
+    public GuestFS fsOpen(@Nonnull File imageFile, @Nonnull String imageFormat, @CheckForNull final Closure<?> c)
+            throws LibGuestFSException {
+        return fsOpen(imageFile, QEmuImageFormat.valueOf(imageFormat), c == null ? null : new Action<GuestFS>() {
+            @Override
+            public void execute(GuestFS t) {
+                c.call(t);
+            }
+        });
+    }
+
+    @Nonnull
     public GuestFS fsOpen(@Nonnull File imageFile, @Nonnull QEmuImageFormat imageFormat)
             throws LibGuestFSException {
-        return fsOpen(imageFile, imageFormat, null);
+        return fsOpen(imageFile, imageFormat, (Action<GuestFS>) null);
+    }
+
+    public GuestFS fsOpen(@Nonnull File imageFile, @Nonnull String imageFormat)
+            throws LibGuestFSException {
+        return fsOpen(imageFile, imageFormat, (Action<GuestFS>) null);
     }
 
     @Nonnull
@@ -226,7 +253,6 @@ public abstract class AbstractImageTask extends ConventionTask {
         out.addAll(Arrays.asList(in));
     }
 
-    // TODO: Default dstRoot = "/"
     public void fsUpload(@Nonnull GuestFS g,
             @Nonnull File srcRoot, @CheckForNull File srcState,
             @Nonnull String dstRoot)
@@ -262,6 +288,12 @@ public abstract class AbstractImageTask extends ConventionTask {
         g.tar_in(tarFile.getAbsolutePath(), dstRoot);
 
         getProject().delete(tarFile);
+    }
+
+    public void fsUpload(@Nonnull GuestFS g,
+            @Nonnull File srcRoot, @CheckForNull File srcState)
+            throws LibGuestFSException {
+        fsUpload(g, srcRoot, srcState, "/");
     }
 
     public void fsDownload(@Nonnull GuestFS g) {
