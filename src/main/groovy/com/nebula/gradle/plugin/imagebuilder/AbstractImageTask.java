@@ -21,6 +21,7 @@ import org.anarres.qemu.image.QEmuImage;
 import org.anarres.qemu.image.QEmuImageFormat;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
+import org.gradle.api.internal.ClosureBackedAction;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
@@ -170,12 +171,7 @@ public abstract class AbstractImageTask extends ConventionTask {
     @Nonnull
     public GuestFS fsOpen(@Nonnull File imageFile, @Nonnull String imageFormat, @CheckForNull final Closure<?> c)
             throws LibGuestFSException {
-        return fsOpen(imageFile, QEmuImageFormat.valueOf(imageFormat), c == null ? null : new Action<GuestFS>() {
-            @Override
-            public void execute(GuestFS t) {
-                c.call(t);
-            }
-        });
+        return fsOpen(imageFile, QEmuImageFormat.valueOf(imageFormat), c == null ? null : new ClosureBackedAction<GuestFS>(c));
     }
 
     @Nonnull
@@ -190,7 +186,7 @@ public abstract class AbstractImageTask extends ConventionTask {
     }
 
     @Nonnull
-    public GuestFS fsOpen(Action<GuestFS> c) throws LibGuestFSException {
+    public GuestFS fsOpen(@CheckForNull Action<GuestFS> c) throws LibGuestFSException {
         return fsOpen(getImageFile(), getImageFormat(), c);
     }
 
@@ -199,9 +195,7 @@ public abstract class AbstractImageTask extends ConventionTask {
     }
 
     @Nonnull
-    public String fsDevice(@Nonnull GuestFS g,
-            @Nonnegative int deviceCount,
-            @Nonnegative int deviceIndex)
+    public String fsDevice(@Nonnull GuestFS g, @Nonnegative int deviceIndex)
             throws LibGuestFSException {
         String[] devices = g.list_devices();
         // println "Devices are " + devices
