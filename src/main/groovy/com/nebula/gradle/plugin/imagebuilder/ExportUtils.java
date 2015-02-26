@@ -62,12 +62,15 @@ import javax.annotation.Nonnull;
                 // target system or VM will use vda, sda or hda.
                 String uuid = g.vfs_uuid(device + partition.index);
                 fstab.append("UUID=" + uuid + " none swap sw 0 0\n");
+            } else if ("none".equals(partition.filesystem)) {
             } else {
                 String filesystem = Objects.firstNonNull(partition.filesystem, "ext4");
                 g.mkfs(filesystem, device + partition.index);
                 String uuid = g.vfs_uuid(device + partition.index);
-                Joiner.on(' ').appendTo(fstab, "UUID=" + uuid, partition.mountpoint, filesystem, partition.options, "0 0\n");
-                mountpoints.put(partition.mountpoint, device + partition.index);
+                if (partition.mountpoint != null) {
+                    Joiner.on(' ').appendTo(fstab, "UUID=" + uuid, partition.mountpoint, filesystem, partition.options, "0 0\n");
+                    mountpoints.put(partition.mountpoint, device + partition.index);
+                }
             }
             g.part_set_bootable(device, partition.index, partition.bootable);
         }
