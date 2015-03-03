@@ -82,7 +82,7 @@ public class ImageTask extends AbstractImageTask {
         });
     }
 
-    public class Context extends GroovyObjectSupport {
+    public class Context extends GroovyObjectSupport implements AutoCloseable {
 
         private GuestFS g;
 
@@ -128,6 +128,7 @@ public class ImageTask extends AbstractImageTask {
          }
          }
          */
+        @Override
         public void close() throws LibGuestFSException {
             if (g != null) {
                 try {
@@ -154,7 +155,7 @@ public class ImageTask extends AbstractImageTask {
                 return getGuestFS();
             if (File.class.isAssignableFrom(c))
                 return getImageFile();
-            return c.cast(this);
+            return DefaultGroovyMethods.asType(this, c);
         }
 
         /*
