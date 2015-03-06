@@ -1,7 +1,7 @@
 import com.nebula.gradle.plugin.imagebuilder.*
 import com.redhat.et.libguestfs.GuestFS
 
-apply plugin: ImageBuilder
+// apply plugin: ImageBuilder
 
 /*
 class MyOperations implements Operations {
@@ -66,51 +66,57 @@ image {
 task('exportRaw', type: ImageTask) {
 
 	export {
-		outputFile "image.foo", "raw"
+		disk {
+			outputFile "image.foo", "raw"
 
-		partition("boot") {
-			filesystem = "ext2"
-			size = 100 * M
-			mountpoint = "/boot"
-			bootable = true
-		}
-		partition("root") {
-			filesystem = "ext4"
-			size = 1 * G
-			mountpoint = "/"
-		}
-		partition("swap") {
-			filesystem = "swap"
-			size = 200 * M
-		}
-		partition("home") {
-			filesystem = "ext4"
-			size = 400 * M
-			mountpoint = "/home"
+			partition("boot") {
+				filesystem = "ext2"
+				size = 100 * M
+				mountpoint = "/boot"
+				bootable = true
+			}
+			partition("root") {
+				filesystem = "ext4"
+				size = 1 * G
+				mountpoint = "/"
+			}
+			partition("swap") {
+				filesystem = "swap"
+				size = 200 * M
+			}
+			partition("home") {
+				filesystem = "ext4"
+				size = 400 * M
+				mountpoint = "/home"
+			}
 		}
 	}
 }
 
 task('exportQcow', type: ImageTask) {
 	export {
-		outputFile "myimage", "qcow2"
+		disk {
+			outputFile "myimage", "qcow2"
 
-		partition("root") {
-			filesystem = "ext4"
-			size = 1 * G
-			mountpoint = "/"
+			partition("root") {
+				filesystem = "ext4"
+				size = 1 * G
+				mountpoint = "/"
+			}
 		}
 	}
 }
 
 task('exportVmdk', type: ImageTask) {
 	export {
-		outputFormat "vmdk"
+		disk {
+			outputFormat "vmdk"
 
-		partition("root") {
-			filesystem = "ext4"
-			size = 1 * G
-			mountpoint = "/"
+			partition("root") {
+				filesystem = "ext4"
+				size = 1 * G
+				mountpoint = "/"
+			}
 		}
 	}
 }
